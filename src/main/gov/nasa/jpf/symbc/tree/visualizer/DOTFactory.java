@@ -130,8 +130,8 @@ public class DOTFactory extends NodeFactory<Node> {
     final StackFrame topFrame = vm.getCurrentThread().getModifiableTopFrame();
     final StringBuilder pcBuilder = new StringBuilder();
     LocalVarInfo[] localVars = topFrame.getLocalVars();
+    int before = pcBuilder.length();
     if (localVars != null) {
-      int before = pcBuilder.length();
       for (int i = 0; i < localVars.length; i++) {
         LocalVarInfo localVar = localVars[i];
         final Object attr = topFrame.getLocalAttr(localVar.getSlotIndex());
@@ -144,13 +144,13 @@ public class DOTFactory extends NodeFactory<Node> {
           pcBuilder.append(attr.toString());
         }
       }
-      if(before != pcBuilder.length()){
-        pcBuilder.append("&&\\n");
-      }
     }
 
     if (pc != null) {
       String[] pcs = pc.header.stringPC().split("&&");
+      if(before != pcBuilder.length() && pcs.length != 0){
+        pcBuilder.append("&&\\n");
+      }
       for (int i = 0; i < pcs.length; i++) {
         pcBuilder.append(pcs[i]);
         if (i != pcs.length - 1)

@@ -130,25 +130,14 @@ public class DOTFactory extends NodeFactory<Node> {
     final StackFrame topFrame = vm.getCurrentThread().getModifiableTopFrame();
     final StringBuilder pcBuilder = new StringBuilder();
     LocalVarInfo[] localVars = topFrame.getLocalVars();
-    int before = pcBuilder.length();
+    boolean wroteLocalVars = false;
     if (localVars != null) {
-      for (int i = 0; i < localVars.length; i++) {
-        LocalVarInfo localVar = localVars[i];
-        final Object attr = topFrame.getLocalAttr(localVar.getSlotIndex());
-        if(attr != null) {
-          if (i != 0) {
-            pcBuilder.append("&&\\n");
-          }
-          pcBuilder.append(localVar.getName());
-          pcBuilder.append("=");
-          pcBuilder.append(attr.toString());
-        }
-      }
+      wroteLocalVars = writeLocalVars(topFrame, pcBuilder, localVars);
     }
 
     if (pc != null) {
       String[] pcs = pc.header.stringPC().split("&&");
-      if(before != pcBuilder.length() && pcs.length != 0){
+      if(wroteLocalVars && pcs.length != 0){
         pcBuilder.append("&&\\n");
       }
       for (int i = 0; i < pcs.length; i++) {
@@ -158,5 +147,22 @@ public class DOTFactory extends NodeFactory<Node> {
       }
     }
     return pcBuilder.append("\r").toString();
+  }
+
+  private boolean writeLocalVars(StackFrame topFrame, StringBuilder pcBuilder, LocalVarInfo[] localVars) {
+    boolean first = true;
+    for (LocalVarInfo localVar : localVars) {
+      final Object attr = topFrame.getLocalAttr(localVar.getSlotIndex());
+      if (attr != null) {
+        if (first) {
+          pcBuilder.append("&&\\n");
+          first = false;
+        }
+        pcBuilder.append(localVar.getName());
+        pcBuilder.append("=");
+        pcBuilder.append(attr.toString());
+      }
+    }
+    return !first;
   }
 }
